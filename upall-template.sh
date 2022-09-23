@@ -136,6 +136,7 @@ fi
 
 echo "# cloudquery:"
 #cloudquery_v=$(cloudquery version | grep -o -P "(?<=Version: )\d{1,}\.\d{1,}\.\d{1,}")
+#cloudquery0.32.3后使用了复杂的tag方式，增加了cli等前缀，暂未找到较好的方法判断最新版本，先使用手动方式进行安装更新
 #cloudquery_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/cloudquery/cloudquery/tags | jq -r ".[0].name" | grep -o -P "v\d{1,}\.\d{1,}\.\d{1,}")
 #if [ "v${cloudquery_v}" != "$cloudquery_latestv" ] && [ "$cloudquery_latestv" != null ]; then
 #	echo "cloudquery:v${cloudquery_v}->${cloudquery_latestv}"
