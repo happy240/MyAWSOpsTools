@@ -5,23 +5,21 @@ echo $sudopass | sudo -S apt update
 sudo apt upgrade -y
 sudo apt autoremove
 sudo apt autoclean
-# 根据需要进行虚拟环境的升级
 echo "# conda:"
 conda update conda -y
 conda update --all -y
-# <Replace with your own envs>
-# conda update -n py27 --all -y
-# conda update -n py39 --all -y
+conda update -n py27 --all -y
+conda update -n py39 --all -y
 
 # terraform通过apt安装升级：https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform
 # packer通过apt安装升级：https://www.packer.io/downloads
 # helm通过apt安装升级：https://helm.sh/docs/intro/install/#from-apt-debianubuntu
 
-binpath="<YOUR bin path>"
+binpath="/mnt/c/wslhome/bin"
 
 # GitHub Token setting, resolve GitHub API invoke rate limit
-githubusername="<YOUR GitHub username>"
-githubtoken="<YOUR GitHub token>"
+githubusername="happy78@live.com"
+githubtoken="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"
 
 #通过空tf模板更新常用的terraform plugin
 echo "# terraform plugins:"
@@ -53,7 +51,7 @@ if [ "${terraformer_v}" != "v${terraformer_latestv}" ] && [ "${terraformer_lates
 	export PROVIDER=aws
 	curl -LO https://github.com/GoogleCloudPlatform/terraformer/releases/download/$(curl -s -u {githubusername}:{githubtoken} https://api.github.com/repos/GoogleCloudPlatform/terraformer/releases/latest | grep tag_name | cut -d '"' -f 4)/terraformer-${PROVIDER}-linux-amd64
 	chmod u+x terraformer-${PROVIDER}-linux-amd64
-	mv "./terraformer-${PROVIDER}-linux-amd64" "${binpath}/terraformer"
+	mv "./terraformer-${PROVIDER}-linux-amd64" ${binpath}/terraformer
 	terraformer version
 fi
 
@@ -62,9 +60,9 @@ terragrunt_v=$(terragrunt --version | grep -o -P "(?<=terragrunt version )v\d{1,
 terragrunt_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | jq -r ".tag_name")
 if [ "${terragrunt_v}" != "$terragrunt_latestv" ] && [ "$terragrunt_latestv" != null ]; then
 	echo "terragrunt:${terragrunt_v}->${terragrunt_latestv}"
-	curl -o "${binpath}/terragrunt" --location "https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_$(uname -s)_amd64"
-	chmod u+x "${binpath}/terragrunt"
-	terragrunt version
+	curl -o ${binpath}/terragrunt --location "https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_$(uname -s)_amd64"
+	chmod u+x ${binpath}/terragrunt
+	terragrunt --version
 fi
 
 echo "# infracost:"
@@ -73,7 +71,7 @@ infracost_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.githu
 if [ "$infracost_v" != "$infracost_latestv" ] && [ "$infracost_latestv" != null ]; then
 	echo "infracost:${infracost_v}->${infracost_latestv}"
 	curl --location "https://github.com/infracost/infracost/releases/download/${infracost_latestv}/infracost-$(uname -s)-amd64.tar.gz" | tar xz -C /tmp
-	sudo mv /tmp/infracost-linux-amd64 "${binpath}/infracost"
+	sudo mv /tmp/infracost-linux-amd64 ${binpath}/infracost
 	infracost --version
 fi
 
@@ -82,7 +80,7 @@ ecscli_v=$(ecs-cli --version | grep -o -P "(?<=ecs-cli version )\d{1,}\.\d{1,}\.
 ecscli_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/aws/amazon-ecs-cli/releases/latest | jq -r ".tag_name")
 if [ "v${ecscli_v}" != "$ecscli_latestv" ] && [ "$ecscli_latestv" != null ]; then
 	echo "ecscli:v${ecscli_v}->${ecscli_latestv}"
-	curl -Lo "${binpath}/ecs-cli" --location "https://amazon-ecs-cli.s3.cn-north-1.amazonaws.com.cn/ecs-cli-linux-amd64-latest"
+	curl -Lo ${binpath}/ecs-cli --location "https://amazon-ecs-cli.s3.cn-north-1.amazonaws.com.cn/ecs-cli-linux-amd64-latest"
 	ecs-cli --version
 fi
 
@@ -108,7 +106,7 @@ awsvault_v=$(aws-vault --version 2>&1)
 awsvault_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/99designs/aws-vault/releases/latest | jq -r ".tag_name")
 if [ "$awsvault_v" != "$awsvault_latestv" ] && [ "$awsvault_latestv" != null ]; then
 	echo "aws-vault:${awsvault_v}->${awsvault_latestv}"
-	curl -o "${binpath}/aws-vault" --location "https://github.com/99designs/aws-vault/releases/latest/download/aws-vault-$(uname -s)-amd64"
+	curl -o ${binpath}/aws-vault --location "https://github.com/99designs/aws-vault/releases/latest/download/aws-vault-$(uname -s)-amd64"
 	aws-vault --version
 fi
 
@@ -141,7 +139,7 @@ echo "# cloudquery:"
 #if [ "v${cloudquery_v}" != "$cloudquery_latestv" ] && [ "$cloudquery_latestv" != null ]; then
 #	echo "cloudquery:v${cloudquery_v}->${cloudquery_latestv}"
 #	curl -L https://github.com/cloudquery/cloudquery/releases/download/cli/${cloudquery_latestv}/cloudquery_linux_x86_64 -o "${binpath}/cloudquery"
-#	chmod a+x "${binpath}/cloudquery"
+#	chmod a+x ${binpath}/cloudquery
 #	cloudquery version
 #fi
 
