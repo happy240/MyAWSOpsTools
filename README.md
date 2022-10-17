@@ -1,5 +1,5 @@
 # MyAWSOpsTools
-A collection of my favorite AWS operation tools install and upgrade script.
+A collection of my favorite AWS operation tools install and upgrade scripts.
 
 - conda
 - terraform
