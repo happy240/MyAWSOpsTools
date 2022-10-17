@@ -1,2 +1,2 @@
-# MyOpsWorkStation
-My favorite AWS operation tools install and upgrade script.
+# MyAWSOpsTools
+A collection of my favorite AWS operation tools install and upgrade script.
