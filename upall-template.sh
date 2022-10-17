@@ -1,5 +1,5 @@
 # NOTE: 执行前设置环境变量开代理
-sudopass="bluebird"
+sudopass="<replace with your sudo password>"
 echo "# apt:"
 echo $sudopass | sudo -S apt update
 sudo apt upgrade -y
@@ -10,8 +10,8 @@ echo "# conda:"
 conda update conda -y
 conda update --all -y
 # <Replace with your own envs>
-conda update -n py27 --all -y
-conda update -n py39 --all -y
+# conda update -n py27 --all -y
+# conda update -n py39 --all -y
 
 # terraform通过apt安装升级：https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform
 # packer通过apt安装升级：https://www.packer.io/downloads
