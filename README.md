@@ -7,6 +7,7 @@ A collection of my favorite AWS operation tools install and upgrade scripts.
 使用提示：这套Shell脚本模板是在WSL2的Ubuntu环境中开发并使用的，其他Linux发行版和Shell环境可能有所不同，另外脚本中也有一些需要替换为符合您的环境和需要的变量，需要在使用前进行设置。
 
 以下是脚本中涉及的一些工具的介绍和使用场景说明：
+
 - conda
 https://conda.io
 conda是包、依赖以及运行环境管理的知名工具。
