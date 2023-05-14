@@ -1,3 +1,6 @@
+binpath="${BIN_PATH:-/mnt/c/wslhome/bin}"
+echo "binpath=${binpath}"
+
 # NOTE: 执行前设置环境变量开代理
 sudopass="<replace with your sudo password>"
 echo "# apt:"
@@ -8,14 +11,11 @@ sudo apt autoclean
 echo "# conda:"
 conda update conda -y
 conda update --all -y
-conda update -n py27 --all -y
-conda update -n py39 --all -y
+#conda update -n <your other conda env> --all -y
 
 # terraform通过apt安装升级：https://learn.hashicorp.com/tutorials/terraform/install-cli#install-terraform
 # packer通过apt安装升级：https://www.packer.io/downloads
 # helm通过apt安装升级：https://helm.sh/docs/intro/install/#from-apt-debianubuntu
-
-binpath="/mnt/c/wslhome/bin"
 
 # GitHub Token setting, resolve GitHub API invoke rate limit
 githubusername="<replace with your github user>"
@@ -32,12 +32,21 @@ python3 -m pip install --upgrade pip
 echo "# boto3:"
 pip install --upgrade boto3
 
+#CDK
+echo "# CDK:"\
+npm install -g aws-cdk@latest
+
+#CDK for Terraform
+echo "# CDK for Terraform:"
+npm install --global cdktf-cli@latest
+
 echo "# awscli:"
 awscli_v=$(aws --version | grep -o -P "(?<=aws-cli\/)\d{1,}\.\d{1,}\.\d{1,}")
 awscli_latestv=$(curl -silent https://raw.githubusercontent.com/aws/aws-cli/v2/CHANGELOG.rst | grep -o -m 1 -P "\d{1,}\.\d{1,}\.\d{1,}")
-if [ "$awscli_v" != "$awscli_latestv" ] && [ "$awscli_latestv" != null ]; then
+if [ "$awscli_v" != "$awscli_latestv" ] && [ "$awscli_latestv" != "" ]; then
 	echo "awscli:v${awscli_v}->v${awscli_latestv}"
-	curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${awscli_latestv}.zip" -o "awscliv2.zip"
+	#curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${awscli_latestv}.zip" -o "awscliv2.zip"
+	wget -O "awscliv2.zip" "https://awscli.amazonaws.com/awscli-exe-linux-x86_64-${awscli_latestv}.zip"
 	unzip -o -q awscliv2.zip
 	sudo ./aws/install --bin-dir /usr/local/bin --install-dir /usr/local/aws-cli --update
 	aws --version
@@ -51,7 +60,7 @@ if [ "${terraformer_v}" != "v${terraformer_latestv}" ] && [ "${terraformer_lates
 	export PROVIDER=aws
 	curl -LO https://github.com/GoogleCloudPlatform/terraformer/releases/download/$(curl -s -u {githubusername}:{githubtoken} https://api.github.com/repos/GoogleCloudPlatform/terraformer/releases/latest | grep tag_name | cut -d '"' -f 4)/terraformer-${PROVIDER}-linux-amd64
 	chmod u+x terraformer-${PROVIDER}-linux-amd64
-	mv "./terraformer-${PROVIDER}-linux-amd64" ${binpath}/terraformer
+	sudo mv "./terraformer-${PROVIDER}-linux-amd64" ${binpath}/terraformer
 	terraformer version
 fi
 
@@ -60,8 +69,9 @@ terragrunt_v=$(terragrunt --version | grep -o -P "(?<=terragrunt version )v\d{1,
 terragrunt_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/gruntwork-io/terragrunt/releases/latest | jq -r ".tag_name")
 if [ "${terragrunt_v}" != "$terragrunt_latestv" ] && [ "$terragrunt_latestv" != null ]; then
 	echo "terragrunt:${terragrunt_v}->${terragrunt_latestv}"
-	curl -o ${binpath}/terragrunt --location "https://github.com/gruntwork-io/terragrunt/releases/latest/download/terragrunt_$(uname -s)_amd64"
-	chmod u+x ${binpath}/terragrunt
+	curl -Lo terragrunt --location "https://github.com/gruntwork-io/terragrunt/releases/download/${terragrunt_latestv}/terragrunt_$(uname -s)_amd64"
+	chmod u+x terragrunt
+	sudo mv terragrunt ${binpath}/terragrunt
 	terragrunt --version
 fi
 
@@ -80,7 +90,9 @@ ecscli_v=$(ecs-cli --version | grep -o -P "(?<=ecs-cli version )\d{1,}\.\d{1,}\.
 ecscli_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/aws/amazon-ecs-cli/releases/latest | jq -r ".tag_name")
 if [ "v${ecscli_v}" != "$ecscli_latestv" ] && [ "$ecscli_latestv" != null ]; then
 	echo "ecscli:v${ecscli_v}->${ecscli_latestv}"
-	curl -Lo ${binpath}/ecs-cli --location "https://amazon-ecs-cli.s3.cn-north-1.amazonaws.com.cn/ecs-cli-linux-amd64-latest"
+	curl -Lo ecs-cli --location "https://amazon-ecs-cli.s3.cn-north-1.amazonaws.com.cn/ecs-cli-linux-amd64-latest"
+	chmod u+x ecs-cli
+	sudo mv ecs-cli ${binpath}/ecs-cli
 	ecs-cli --version
 fi
 
@@ -106,10 +118,13 @@ awsvault_v=$(aws-vault --version 2>&1)
 awsvault_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/99designs/aws-vault/releases/latest | jq -r ".tag_name")
 if [ "$awsvault_v" != "$awsvault_latestv" ] && [ "$awsvault_latestv" != null ]; then
 	echo "aws-vault:${awsvault_v}->${awsvault_latestv}"
-	curl -o ${binpath}/aws-vault --location "https://github.com/99designs/aws-vault/releases/latest/download/aws-vault-$(uname -s)-amd64"
+	curl -Lo aws-vault --location "https://github.com/99designs/aws-vault/releases/latest/download/aws-vault-$(uname -s)-amd64"
+	chmod u+x aws-vault
+	sudo mv aws-vault ${binpath}/aws-vault
 	aws-vault --version
 fi
 
+## DISABLED when hyper-v off
 echo "# steampipe:"
 steampipe_v=$(steampipe -v | grep -o -P "\d{1,}\.\d{1,}\.\d{1,}")
 steampipe_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/turbot/steampipe/releases/latest | jq -r ".tag_name")
@@ -118,7 +133,7 @@ if [ "v${steampipe_v}" != "$steampipe_latestv" ] && [ "$steampipe_latestv" != nu
 	sudo /bin/sh -c "$(curl -fsSL https://raw.githubusercontent.com/turbot/steampipe/main/install.sh)"
 	steampipe -v
 fi
-# NOTE: plugin安装更新需要开全局代理
+## NOTE: plugin安装更新需要开全局代理
 steampipe plugin update --all
 
 echo "# pulumi:"
@@ -126,22 +141,23 @@ pulumi_v=$(pulumi version)
 # github release与stable version不一致
 # pulumi_latestv=$(curl -sL https://api.github.com/repos/pulumi/pulumi/releases/latest | jq -r ".tag_name")
 pulumi_latestv=$(curl -sL https://www.pulumi.com/docs/get-started/install/versions/ | grep -o -P "(?<=The current stable version of Pulumi is <strong>)\d{1,}\.\d{1,}\.\d{1,}")
-if [ "$pulumi_v" != "v${pulumi_latestv}" ]; then
+if [ "$pulumi_v" != "v${pulumi_latestv}" ] && [ "$pulumi_latestv" != null ]; then
 	echo "pulumi:${pulumi_v}->v${pulumi_latestv}"
 	curl -fsSL https://get.pulumi.com | sh
 	pulumi version
 fi
 
 echo "# cloudquery:"
-#cloudquery_v=$(cloudquery version | grep -o -P "(?<=Version: )\d{1,}\.\d{1,}\.\d{1,}")
-#cloudquery0.32.3后使用了复杂的tag方式，增加了cli等前缀，暂未找到较好的方法判断最新版本，先使用手动方式进行安装更新
-#cloudquery_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/cloudquery/cloudquery/tags | jq -r ".[0].name" | grep -o -P "v\d{1,}\.\d{1,}\.\d{1,}")
-#if [ "v${cloudquery_v}" != "$cloudquery_latestv" ] && [ "$cloudquery_latestv" != null ]; then
-#	echo "cloudquery:v${cloudquery_v}->${cloudquery_latestv}"
-#	curl -L https://github.com/cloudquery/cloudquery/releases/download/cli/${cloudquery_latestv}/cloudquery_linux_x86_64 -o "${binpath}/cloudquery"
-#	chmod a+x ${binpath}/cloudquery
-#	cloudquery version
-#fi
+cloudquery_v=$(cloudquery -v | grep -o -P "(?<=cloudquery version )\d{1,}\.\d{1,}\.\d{1,}")
+cloudquery_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/cloudquery/cloudquery/releases/latest | jq -r ".name" | grep -o -P "\d{1,}\.\d{1,}\.\d{1,}")
+if [ "${cloudquery_v}" != "$cloudquery_latestv" ] && [ "$cloudquery_latestv" != "" ]; then
+	echo "cloudquery:v${cloudquery_v}->v${cloudquery_latestv}"
+	curl "https://github.com/cloudquery/cloudquery/releases/download/cli-v${cloudquery_latestv}/cloudquery_linux_amd64.zip" -L -o "cloudquery_linux_amd64.zip"
+	unzip cloudquery_linux_amd64.zip -d cloudquery
+	chmod a+x ./cloudquery/cloudquery
+	sudo mv ./cloudquery/cloudquery ${binpath}/cloudquery
+	cloudquery -v
+fi
 
 echo "# samcli:"
 samcli_v=$(sam --version | grep -o -P "(?<=SAM CLI, version )\d{1,}\.\d{1,}\.\d{1,}")
