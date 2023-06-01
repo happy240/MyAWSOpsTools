@@ -1,5 +1,10 @@
+#!/bin/bash
 binpath="${BIN_PATH:-/mnt/c/wslhome/bin}"
 echo "binpath=${binpath}"
+
+# GitHub Token setting, resolve GitHub API invoke rate limit
+githubusername="<replace with your github user>"
+githubtoken="<replace with your github token>"
 
 # NOTE: 执行前设置环境变量开代理
 sudopass="<replace with your sudo password>"
@@ -17,10 +22,6 @@ conda update --all -y
 # packer通过apt安装升级：https://www.packer.io/downloads
 # helm通过apt安装升级：https://helm.sh/docs/intro/install/#from-apt-debianubuntu
 
-# GitHub Token setting, resolve GitHub API invoke rate limit
-githubusername="<replace with your github user>"
-githubtoken="<replace with your github token>"
-
 #通过空tf模板更新常用的terraform plugin
 echo "# terraform plugins:"
 terraform init -upgrade
@@ -31,6 +32,20 @@ python3 -m pip install --upgrade pip
 #更新boto3
 echo "# boto3:"
 pip install --upgrade boto3
+
+#nvm
+echo "# nvm:"
+source ~/.nvm/nvm.sh
+nvm_v=$(nvm --version)
+nvm_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/nvm-sh/nvm/releases/latest | jq -r ".tag_name")
+if [ v"$nvm_v" != "$nvm_latestv" ] && [ "$nvm_latestv" != "" ]; then
+	echo "nvm:v${nvm_v}->${nvm_latestv}"
+	curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/${nvm_latestv}/install.sh | bash
+	nvm --version
+fi
+
+#npm
+npm upgrade -g
 
 #CDK
 echo "# CDK:"\
@@ -139,21 +154,21 @@ steampipe plugin update --all
 echo "# pulumi:"
 pulumi_v=$(pulumi version)
 # github release与stable version不一致
-# pulumi_latestv=$(curl -sL https://api.github.com/repos/pulumi/pulumi/releases/latest | jq -r ".tag_name")
-pulumi_latestv=$(curl -sL https://www.pulumi.com/docs/get-started/install/versions/ | grep -o -P "(?<=The current stable version of Pulumi is <strong>)\d{1,}\.\d{1,}\.\d{1,}")
-if [ "$pulumi_v" != "v${pulumi_latestv}" ] && [ "$pulumi_latestv" != null ]; then
-	echo "pulumi:${pulumi_v}->v${pulumi_latestv}"
+pulumi_latestv=$(curl -sL https://api.github.com/repos/pulumi/pulumi/releases/latest | jq -r ".tag_name")
+# pulumi_latestv=$(curl -sL https://www.pulumi.com/docs/get-started/install/versions/ | grep -o -P "(?<=The current stable version of Pulumi is <strong>)\d{1,}\.\d{1,}\.\d{1,}")
+if [ "$pulumi_v" != "${pulumi_latestv}" ] && [ "$pulumi_latestv" != null ]; then
+	echo "pulumi:${pulumi_v}->${pulumi_latestv}"
 	curl -fsSL https://get.pulumi.com | sh
 	pulumi version
 fi
 
 echo "# cloudquery:"
 cloudquery_v=$(cloudquery -v | grep -o -P "(?<=cloudquery version )\d{1,}\.\d{1,}\.\d{1,}")
-cloudquery_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/cloudquery/cloudquery/releases/latest | jq -r ".name" | grep -o -P "\d{1,}\.\d{1,}\.\d{1,}")
+cloudquery_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.com/repos/cloudquery/cloudquery/releases?per_page=100 | jq 'first(.[] | select(.name | startswith("cli")) | .name)' | grep -o -P "(?<=cli-v)\d{1,}\.\d{1,}\.\d{1,}")
 if [ "${cloudquery_v}" != "$cloudquery_latestv" ] && [ "$cloudquery_latestv" != "" ]; then
 	echo "cloudquery:v${cloudquery_v}->v${cloudquery_latestv}"
 	curl "https://github.com/cloudquery/cloudquery/releases/download/cli-v${cloudquery_latestv}/cloudquery_linux_amd64.zip" -L -o "cloudquery_linux_amd64.zip"
-	unzip cloudquery_linux_amd64.zip -d cloudquery
+	unzip -o cloudquery_linux_amd64.zip -d cloudquery
 	chmod a+x ./cloudquery/cloudquery
 	sudo mv ./cloudquery/cloudquery ${binpath}/cloudquery
 	cloudquery -v
@@ -165,7 +180,7 @@ samcli_latestv=$(curl -sL -u {githubusername}:{githubtoken} https://api.github.c
 if [ "v${samcli_v}" != "$samcli_latestv" ] && [ "$samcli_latestv" != null ]; then
 	echo "samcli:v${samcli_v}->${samcli_latestv}"
 	curl "https://github.com/aws/aws-sam-cli/releases/download/${samcli_latestv}/aws-sam-cli-linux-x86_64.zip" -L -o "aws-sam-cli-linux-x86_64.zip"
-	unzip aws-sam-cli-linux-x86_64.zip -d sam-installation
+	unzip -o aws-sam-cli-linux-x86_64.zip -d sam-installation
 	sudo ./sam-installation/install --update
 	sam --version
 fi
